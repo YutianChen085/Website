@@ -1,0 +1,433 @@
+---
+title: 'Project 2: Modeling, Testing, and Predicting'
+author: "Yutian Chen (yc25997)"
+date: '2020-05-01'
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+
+
+<div id="modeling" class="section level1">
+<h1>Modeling</h1>
+<div id="instructions" class="section level2">
+<h2>Instructions</h2>
+<p>A knitted R Markdown document (as a PDF) and the raw R Markdown file (as .Rmd) should both be submitted to Canvas by 11:59pm on 5/1/2020. These two documents will be graded jointly, so they must be consistent (i.e., don’t change the R Markdown file without also updating the knitted document). Knit an html copy too, for later! In the .Rmd file for Project 2, you can copy the first code-chunk into your project .Rmd file to get better formatting. Notice that you can adjust the opts_chunk$set(…) above to set certain parameters if necessary to make the knitting cleaner (you can globally set the size of all plots, etc). You can copy the set-up chunk in Project2.Rmd: I have gone ahead and set a few for you (such as disabling warnings and package-loading messges when knitting)!</p>
+</div>
+<div id="find-data" class="section level2">
+<h2>Find data:</h2>
+<p>Find one dataset with at least 5 variables that wish to use to build models. At least one should be categorical (with 2-5 groups) and at least two should be numeric. Ideally, one of your variables will be binary (if not, you will need to create one by discretizing a numeric, which is workable but less than ideal). You will need a minimum of 40 observations (<em>at least</em> 10 observations for every explanatory variable you have, ideally 20+ observations/variable).</p>
+</div>
+<div id="guidelines-and-rubric" class="section level2">
+<h2>Guidelines and Rubric</h2>
+<ul>
+<li><strong>0. (5 pts)</strong> Introduce your dataset and each of your variables (or just your main variables if you have lots) in a paragraph. What are they measuring? How many observations?</li>
+</ul>
+<pre class="r"><code>library(readr)
+ICU&lt;-read_csv(&quot;ICU.csv&quot;)
+head(ICU)</code></pre>
+<pre><code>## # A tibble: 6 x 10
+## X1 ID Survive Age AgeGroup Sex Infection SysBP Pulse
+Emergency
+## &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+&lt;dbl&gt;
+## 1 1 4 0 87 3 1 1 80 96 1
+## 2 2 8 1 27 1 1 1 142 88 1
+## 3 3 12 1 59 2 0 0 112 80 1
+## 4 4 14 1 77 3 0 0 100 70 0
+## 5 5 27 0 76 3 1 1 128 90 1
+## 6 6 28 1 54 2 0 1 142 103 1</code></pre>
+<p>The Intensive Care Unit Patients dataset, named “ICU”, includes data from a sample of 200 pateints at an Intensive Care Unit (ICU). It is a data frame with 200 observations on the 9 variables: patient ID code, patient survival, age (in years), age group, sex, infection status, systolic blood pressure (in mm of Hg), heart rate (beats per minute), and emergency status.</p>
+<ul>
+<li><strong>1. (15 pts)</strong>
+Perform a MANOVA testing whether any of your numeric variables (or a subset of them, if including them all doesn’t make sense) show a mean difference across levels of one of your categorical variables (3).
+If they do, perform univariate ANOVAs to find response(s) showing a mean difference across groups (3), and perform post-hoc t tests to find which groups differ (3).
+Discuss the number of tests you have performed, calculate the probability of at least one type I error (if unadjusted), and adjust the significance level accordingly (bonferroni correction) before discussing significant differences (3).
+Briefly discuss assumptions and whether or not they are likely to have been met (2).</li>
+</ul>
+<pre class="r"><code>#MANOVA
+manova&lt;-manova(cbind(Age,SysBP,Pulse)~Survive, data=ICU)
+summary(manova)</code></pre>
+<pre><code>## Df Pillai approx F num Df den Df Pr(&gt;F)
+## Survive 1 0.081387 5.7884 3 196 0.0008221 ***
+## Residuals 198
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>#univariate ANOVA
+library(dplyr)
+summary.aov(manova)</code></pre>
+<pre><code>## Response Age :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Survive 1 2873 2872.82 7.3717 0.007211 **
+## Residuals 198 77163 389.71
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Response SysBP :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Survive 1 9052 9051.9 8.657 0.003647 **
+## Residuals 198 207030 1045.6
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Response Pulse :
+## Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Survive 1 144 144.50 0.1999 0.6553
+## Residuals 198 143101 722.73</code></pre>
+<pre class="r"><code>ICU%&gt;%group_by(Survive)%&gt;%summarize(mean(Age),mean(SysBP),mean(Pulse))</code></pre>
+<pre><code>## # A tibble: 2 x 4
+##   Survive `mean(Age)` `mean(SysBP)` `mean(Pulse)`
+##     &lt;dbl&gt;       &lt;dbl&gt;         &lt;dbl&gt;         &lt;dbl&gt;
+## 1       0        65.1          119.         101. 
+## 2       1        55.6          136.          98.5</code></pre>
+<pre class="r"><code>#post hoc
+pairwise.t.test(ICU$Age,ICU$Survive,p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  ICU$Age and ICU$Survive 
+## 
+##   0     
+## 1 0.0072
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(ICU$SysBP,ICU$Survive,p.adj=&quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  ICU$SysBP and ICU$Survive 
+## 
+##   0     
+## 1 0.0036
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>#type I error
+#number of tests = 1 MANOVA, 3 ANOVA, 2 post hoc t-tests
+1-(0.95^6)</code></pre>
+<pre><code>## [1] 0.2649081</code></pre>
+<pre class="r"><code>#Boneforroni
+0.05/6</code></pre>
+<pre><code>## [1] 0.008333333</code></pre>
+<p>A MANOVA was conducted to determine the effect of age, systolic blood pressure, and heart rate on patient survival. Significant differences were found between the two patient survival groups for at least one of the dependent variabels (Pillai trace=0.0814, pseudo F(3,196), p(0.0008)&lt;0.05.</p>
+<p>Univariate ANOVAs for each dependent variable were conducted as follow-up tests to the MANOVA, using the Bonferroni method for controlling Type I error rates for multiple conparisons. From the ANOVA analysis, we can see that the p-value for test with age was 0.0072 and for test with systolic blood pressure was 0.0036, which were both smllaer than the alpha level of 0.05. Therefore, the univariate ANOVAs for age and systolic blood pressure on patient survival were significant, and we continued with running 2 post-hoc-t-tests. On the other hand, the p-value for test with pulse was 0.6553, which was greater than the alpha level of 0.05. We failed to reject the hypothesis and the effect of pulse on patient survival was not significant; the means of each group were about equal.</p>
+<p>We did 1 MANOVAs, 3 ANOVAs and 2 post hoc t-tests. 6 hypothesis tests have been done in total and the probability of at least one type I error was 0.2649. To keep the overall type I error rate at 0.05, the significant level that should be used after Bonferroni correction was 0.0083. After the adjustment, the effects of age and systolic blood pressure were still significant on patient survival groups as their p-values were 0.0072 and 0.0036, accordingly.</p>
+<p>For these hypothesis tests, we assumed the dataset contains random sample and independent observations. These were likely to be met because they are a random sample of 200 patients from a larger study. Multivariate normality of different variables were also likely to be met because each patient survival groups has a sample size larger than 25. Homogeneity of within-group covariance matrices, linear relationships among different vaiables, no extreme univariate or multivariate outliers, and no multicollinearity were assumptions that had not been tested formally and these were uaully hard to be meet. We assumed they were all met when we ran the tests and models.</p>
+<ul>
+<li><strong>2. (10 pts)</strong> Perform some kind of randomization test on your data (that makes sense). This can be anything you want! State null and alternative hypotheses, perform the test, and interpret the results (7). Create a plot visualizing the null distribution and the test statistic (3).</li>
+</ul>
+<pre class="r"><code>#Randomization test
+ICU%&gt;%group_by(Survive)%&gt;%summarize(means=mean(SysBP))%&gt;%summarize(`mean_diff:`=diff(means))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   `mean_diff:`
+##          &lt;dbl&gt;
+## 1         16.8</code></pre>
+<pre class="r"><code>set.seed(400)
+rand_bp&lt;-vector()
+for (i in 1:5000){
+  newdata&lt;-data.frame(bp=sample(ICU$SysBP),survive=ICU$Survive)
+  rand_bp[i]&lt;-mean(newdata[newdata$survive==&quot;0&quot;,]$bp)-
+    mean(newdata[newdata$survive==&quot;1&quot;,]$bp)}
+mean(rand_bp&gt;16.81875|rand_bp&lt; -16.81875)</code></pre>
+<pre><code>## [1] 0.0034</code></pre>
+<pre class="r"><code>#Visualization
+{hist(rand_bp,main=&quot;Histogram for Mean Systoilc Blood Pressure Difference&quot;,ylab=&quot;Frequency&quot;,xlab=&quot;Systolic Blood Pressure (mmHg)&quot;,col=&quot;pink&quot;,breaks=50);
+  abline(v=16.81875,col=&quot;red&quot;);
+  abline(v=-16.81875,col=&quot;red&quot;)}</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" />
+An randomization test was conducted to see whether there was a difference in mean systolic blood pressure (mmHg) between patient who were survivd and who were not survived. A distribution of 5000 mean differences on randomized data was generated.</p>
+<p>The null hypothesis: mean systolic blood pressure (mmHg) was the same for survived vs. not survived patients.
+The alternative hypothesis: mean systolic blood pressure (mmHg) was different for sutvived vs. not survived patients.</p>
+<p>The resulted p-value of 0.0036, which is smaller than the alpha level of 0.05, indicated that the null hypothesis was rejected and there was a significant difference in mean systolic blood pressure (mmHg) between patient who were survived and who were not survived.There was only 0.36% of mean differences stimulated under the null hypothesis that were more extreme than the actual value of +/-16.82. The visualization plot of the null distribution and the test statistic were shown above.</p>
+<ul>
+<li><strong>3. (35 pts)</strong> Build a linear regression model predicting one of your response variables from at least 2 other variables, including their interaction. Mean-center any numeric variables involved in the interaction.
+<ul>
+<li>Interpret the coefficient estimates (do not discuss significance) (10)</li>
+<li>Plot the regression using <code>ggplot()</code>. If your interaction is numeric by numeric, refer to code near the end of WS15 to make the plot. If you have 3 or more predictors, just chose two to plot for convenience. (8)</li>
+<li>Check assumptions of linearity, normality, and homoskedasticity either graphically or using a hypothesis test (4)</li>
+<li>Regardless, recompute regression results with robust standard errors via <code>coeftest(..., vcov=vcovHC(...))</code>. Discuss significance of results, including any changes from before/after robust SEs if applicable. (8)</li>
+<li>What proportion of the variation in the outcome does your model explain? (4)</li>
+</ul></li>
+</ul>
+<pre class="r"><code>library(lmtest)
+#Logistic regression
+ICU$Age_c&lt;-ICU$Age-mean(ICU$Age,na.rm=T)
+ICU$Emergency[ICU$Emergency==1]&lt;-&#39;Yes&#39;
+ICU$Emergency[ICU$Emergency==0]&lt;-&#39;No&#39;
+fit&lt;-lm(Pulse~Age_c*Emergency,data=ICU)
+summary(fit)</code></pre>
+<pre><code>##
+## Call:
+## lm(formula = Pulse ~ Age_c * Emergency, data = ICU)
+##
+## Residuals:
+## Min 1Q Median 3Q Max
+## -63.557 -16.917 -3.928 16.011 86.799
+##
+## Coefficients:
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 94.4823 3.8476 24.556 &lt; 2e-16 ***
+## Age_c -0.5409 0.2323 -2.329 0.02088 *
+## EmergencyYes 7.7539 4.4091 1.759 0.08020 .
+## Age_c:EmergencyYes 0.7612 0.2537 3.001 0.00304 **
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Residual standard error: 25.96 on 196 degrees of freedom
+## Multiple R-squared: 0.07817, Adjusted R-squared: 0.06406
+## F-statistic: 5.54 on 3 and 196 DF, p-value: 0.001137</code></pre>
+<pre class="r"><code>#Interaction plot
+library(ggplot2)
+newICU&lt;-ICU
+newICU$Emergency&lt;-rep(&quot;Yes&quot;,length(newICU$Emergency))
+newICU$pred1&lt;-predict(fit,newICU)
+newICU$Emergency&lt;-rep(&quot;No&quot;,length(newICU$Emergency))
+newICU$pred2&lt;-predict(fit,newICU)
+ggplot(ICU,aes(x=Age_c,y=Pulse,color=Emergency))+
+  geom_point()+geom_line(data=newICU,aes(y=pred1),color=&#39;lightblue&#39;,size=1.5)+
+  geom_line(data=newICU,aes(y=pred2),color=&#39;pink&#39;,size=1.5)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-6-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Kolmogorov-Smirnov test for normality
+resids&lt;-fit$residuals
+ks.test(resids,&quot;pnorm&quot;,mean=0,sd(resids))</code></pre>
+<pre><code>## 
+##  One-sample Kolmogorov-Smirnov test
+## 
+## data:  resids
+## D = 0.064541, p-value = 0.3754
+## alternative hypothesis: two-sided</code></pre>
+<pre class="r"><code>#Residuals vs. fitted plots for linearity
+fitvals&lt;-fit$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0,color=&quot;red&quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-6-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Breusch-Pagan test for homoskedasticity
+library(sandwich)
+bptest(fit)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  fit
+## BP = 2.1943, df = 3, p-value = 0.5331</code></pre>
+<pre class="r"><code>coeftest(fit)</code></pre>
+<pre><code>##
+## t test of coefficients:
+##
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 94.48234 3.84765 24.5559 &lt; 2.2e-16 ***
+## Age_c -0.54092 0.23226 -2.3289 0.020881 *
+## EmergencyYes 7.75392 4.40908 1.7586 0.080202 .
+## Age_c:EmergencyYes 0.76123 0.25367 3.0009 0.003042 **
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>coeftest(fit,vcov=vcovHC(fit))</code></pre>
+<pre><code>##
+## t test of coefficients:
+##
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 94.48234 3.46569 27.2622 &lt; 2.2e-16 ***
+## Age_c -0.54092 0.22261 -2.4299 0.016006 *
+## EmergencyYes 7.75392 4.13571 1.8749 0.062298 .
+## Age_c:EmergencyYes 0.76123 0.24592 3.0955 0.002253 **
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>#Proportion of variation in the response variable (R square)
+sum((fitvals-mean(ICU$Pulse))^2)/sum((ICU$Pulse-mean(ICU$Pulse))^2)</code></pre>
+<pre><code>## [1] 0.07817002</code></pre>
+<p>A linear regression model was generated to predict patient’s pulse from an average age and emergency status: Pulse=94.4-0.54(Age_c)+7.75(Emergency)+0.76(Age_c*Emergency)</p>
+<p>Intercept: A patient with an average age and non-emergent status has a predicted pulse of 94.48 bpm.
+Age_c: A non-emergent patient show an decrease of 0.54 bpm in pulse for every 1-year increase in age on average.
+EmergencyYes: In patients average age, pulse is 7.75 bpm higher for emergent patients compared to non-emergent patients.
+Age_c:EmergencyYes: The slope for age on pulse is 0.76 higher for emergent patient compared to non-emergent patients.</p>
+<p>We assumed that the dataset was consist of independent observations and random samples. Assumptions of normality, linearity, and homoskedasticity for this linear regression were checked either graphically or using hypothesis test. A Kolmogorov-Smirnov test was performed to check the normality of the model. A p-value of 0.37 that is greater than the alpha level of 0.05 showed we failed to rejected the null hypothesis. The normality assumption was successfully passed. A residuals versus fitted plots was generated to detect non-linearity, error variances, and outliers of the model. The residuals are scattered randomlly, which means neither linearity nor homoskedasticity were violated. In addition, a Breuch-Pagan test was run to formally test the homoskedasticity assumption. A p-value of 0.53 which is greater than the alpha level of 0.05 showed we failed to rejected the null hypothesis. Thus, the homoskedasticity assumption was met.</p>
+<p>Although the homoskedasticity assumption was met, we recompute regression results with robust standard errors. The p-values and standard errors all decreased after robust standard errors were generated, which made the model less conservative. However, there was no big difference before and after robust correction, showing that the robust correction was not necessary as the homoskedasticity assumption was met.</p>
+<p>The proportion of the variation in the outcome was calculated by R square. As the result, the model explaied 0.078 of the variation in the outcome.</p>
+<ul>
+<li><strong>4. (5 pts)</strong> Rerun same regression model (with interaction), but this time compute bootstrapped standard errors. Discuss any changes you observe in SEs and p-values using these SEs compared to the original SEs and the robust SEs)</li>
+</ul>
+<pre class="r"><code>#Bootstrapped SEs(resampling rows)
+ICU_dat&lt;-ICU[sample(nrow(ICU),replace=TRUE),]
+set.seed(500)
+samp_ICU&lt;-replicate(5000,{
+  boot_ICU&lt;-ICU[sample(nrow(ICU),replace=TRUE),]
+  fit&lt;-lm(Pulse~Age_c*Emergency,data=boot_ICU)
+  coef(fit)})
+samp_ICU%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)     Age_c EmergencyYes Age_c:EmergencyYes
+## 1    3.322854 0.2157581      3.98777          0.2389105</code></pre>
+<pre class="r"><code>#Normal-theory SEs
+coeftest(fit)</code></pre>
+<pre><code>##
+## t test of coefficients:
+##
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 94.48234 3.84765 24.5559 &lt; 2.2e-16 ***
+## Age_c -0.54092 0.23226 -2.3289 0.020881 *
+## EmergencyYes 7.75392 4.40908 1.7586 0.080202 .
+## Age_c:EmergencyYes 0.76123 0.25367 3.0009 0.003042 **
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>#Robust SEs
+coeftest(fit,vcov=vcovHC(fit))</code></pre>
+<pre><code>##
+## t test of coefficients:
+##
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 94.48234 3.46569 27.2622 &lt; 2.2e-16 ***
+## Age_c -0.54092 0.22261 -2.4299 0.016006 *
+## EmergencyYes 7.75392 4.13571 1.8749 0.062298 .
+## Age_c:EmergencyYes 0.76123 0.24592 3.0955 0.002253 **
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<p>We reran the same regression model and computed bootstrapped standard errors. Except the intercept, the standard errors of average age, emergency status and the interaction between age and emergency status were all smaller than normal-theory standard errors and robust standard errors. The p-values in normal-theory standard errors for all variables and interaction were greater than the ones in robust standard errors and bootstrapped standard errors.</p>
+<ul>
+<li><strong>5. (40 pts)</strong> Perform a logistic regression predicting a binary categorical variable (if you don’t have one, make/get one) from at least two explanatory variables (interaction not necessary).
+<ul>
+<li>Interpret coefficient estimates in context (10)</li>
+<li>Report a confusion matrix for your logistic regression (2)</li>
+<li>Compute and discuss the Accuracy, Sensitivity (TPR), Specificity (TNR), and Recall (PPV) of your model (5)</li>
+<li>Using ggplot, plot density of log-odds (logit) by your binary outcome variable (3)</li>
+<li>Generate an ROC curve (plot) and calculate AUC (either manually or with a package); interpret (10)</li>
+<li>Perform 10-fold (or repeated random sub-sampling) CV and report average out-of-sample Accuracy, Sensitivity, and Recall (10)</li>
+</ul></li>
+</ul>
+<pre class="r"><code># Logistic regression
+log_ICU&lt;-ICU%&gt;%mutate(y=ifelse(Emergency==&quot;Yes&quot;,1,0))
+logit&lt;-function(p)log(odds(p))
+fitt&lt;-glm(y~Age+Pulse,family=&quot;binomial&quot;(link=&quot;logit&quot;),data=log_ICU)
+coeftest(fitt)</code></pre>
+<pre><code>##
+## z test of coefficients:
+##
+## Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) 0.8724981 0.8314394 1.0494 0.294002
+## Age -0.0247953 0.0092245 -2.6880 0.007188 **
+## Pulse 0.0168970 0.0066491 2.5412 0.011046 *
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>#Confusion matrix
+probs&lt;-predict(fitt,type=&quot;response&quot;)
+table(predict=as.numeric(probs&gt;.5),truth=log_ICU$y)%&gt;%addmargins()</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0     4   2   6
+##     1    49 145 194
+##     Sum  53 147 200</code></pre>
+<pre class="r"><code>#Accuracy
+(4+145)/200</code></pre>
+<pre><code>## [1] 0.745</code></pre>
+<pre class="r"><code>#Sensitivity (TPR): the true positive rate
+145/147</code></pre>
+<pre><code>## [1] 0.9863946</code></pre>
+<pre class="r"><code>#Specificity (TNR): the true negative rate
+4/53</code></pre>
+<pre><code>## [1] 0.0754717</code></pre>
+<pre class="r"><code>#Precision (PPV): the proportion calssified emergency who acually are
+145/194</code></pre>
+<pre><code>## [1] 0.7474227</code></pre>
+<pre class="r"><code>#Density plot
+log_ICU$logit&lt;-predict(fitt)
+log_ICU$outcome&lt;-ifelse(log_ICU$y==1,&quot;Emergent&quot;,&quot;Not_Emergent&quot;)
+log_ICU$outcome&lt;-factor(log_ICU$outcome,levels=c(&quot;Emergent&quot;,&quot;Not_Emergent&quot;))
+ggplot(log_ICU,aes(logit,fill=outcome))+geom_density(alpha=0.3)+
+  geom_vline(xintercept=0,lty=2)+xlab(&quot;predictor(logit)&quot;)</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-8-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#ROC Curve and AUC in R
+library(plotROC)
+ROCplot&lt;-ggplot(data=log_ICU)+geom_roc(aes(d=y,m=probs),n.cuts=0)
+ROCplot</code></pre>
+<p><img src="/project2_files/figure-html/unnamed-chunk-8-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.6779618</code></pre>
+<pre class="r"><code>#10-fold CV and Accuracy, Sensitivity, and Precision
+set.seed(1234)
+k=10
+data&lt;-log_ICU%&gt;%sample_frac
+folds&lt;-ntile(1:nrow(data),n=10)
+diags&lt;-NULL
+for(i in 1:k){
+  train&lt;-data[folds!=i,]
+  test&lt;-data[folds==i,]
+  truth&lt;-test$y
+  fitt&lt;-glm(y~Age+Pulse,data=train,family=&quot;binomial&quot;)
+  probb&lt;-predict(fitt,newdata=test,type=&quot;response&quot;)
+  diags&lt;-rbind(diags,class_diag(probb,truth))}
+summarize_all(diags,mean)</code></pre>
+<pre><code>##     acc      sens spec       ppv       auc
+## 1 0.715 0.9571954 0.05 0.7388304 0.6777885</code></pre>
+<p>A logistic regression model was generated to predict patient’s emergency status from age and pulse.</p>
+<p>Intercept: odds of emergency for age=0 and pulse=0 is 0.87.
+Age: controlling for pulse, for every one additional year-old, odds of emergency decrease by a factor of 0.02.
+Pulse: controlling for age, for every one additional beat per minute, odds of emergency increase by a factor of 0.02.</p>
+<p>A confusion matrix was created for the logistic regression. There were 4 true non-emergent patients, 145 true emergent patients, 2 false non-emergent patients, and 49 false emergent patients. From the confusion matrix, accuracy was 0.75, sensitivity was 0.99, specificity was 0.08, and precision was 0.75.</p>
+<p>An receiver operating characteristic (ROC) curve was generated and the area under the curve (AUC) was calculated. The resulted AUC was 0.68, meaning that 68% of randomly selected patient with emergency condition had a higher predicted probability than a randomly selected person without emergency condition. This logisti regression model was not predicting well overall.</p>
+<p>A 10-fold cross-validation was performed with the logistic regression model. The average out-of-sample accuracy was 0.725, sensitivity was 0.97, and recall was 0.74. The AUC dropped to 0.66 from 0.68. Although it was not a huge decrease, there were still a little overfitting present.</p>
+<ul>
+<li><strong>6. (10 pts)</strong> Choose one variable you want to predict (can be one you used from before; either binary or continuous) and run a LASSO regression inputting all the rest of your variables as predictors.
+Choose lambda to give the simplest model whose accuracy is near that of the best (i.e., <code>lambda.1se</code>).
+Discuss which variables are retained. Perform 10-fold CV using this model: if response in binary, compare model’s out-of-sample accuracy to that of your logistic regression in part 5; if response is numeric, compare the residual standard error (at the bottom of the summary output, aka RMSE): lower is better fit!</li>
+</ul>
+<pre class="r"><code># LASSO regression
+library(glmnet)
+set.seed(1234)
+y&lt;-as.matrix(ICU$Emergency)
+x&lt;-model.matrix(Emergency~.,data=ICU)[,-1][,-1]
+x&lt;-scale(x)
+cv&lt;-cv.glmnet(x,y,family=&quot;binomial&quot;)
+lasso&lt;-glmnet(x,y,family=&quot;binomial&quot;,lambda=cv$lambda.1se)
+coef(lasso)</code></pre>
+<pre><code>## 10 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                      s0
+## (Intercept)  1.10680239
+## ID           0.26304091
+## Survive     -0.44382176
+## Age          .         
+## AgeGroup    -0.30423795
+## Sex          0.07562696
+## Infection    0.09667551
+## SysBP       -0.10050585
+## Pulse        0.13292674
+## Age_c        .</code></pre>
+<pre class="r"><code># 10-fold CV
+lasso_ICU&lt;-ICU%&gt;%mutate(Emergency=ifelse(Emergency==&quot;Yes&quot;,1,0))%&gt;%select(ID,Survive,AgeGroup,Sex,Infection,SysBP,Pulse,Emergency)
+set.seed(1234)
+k=10
+data1&lt;-lasso_ICU%&gt;%sample_frac
+folds1&lt;-ntile(1:nrow(data1),n=10)
+diags1&lt;-NULL
+for(i in 1:k){
+  train1&lt;-data1[folds1!=i,]
+  test1&lt;-data1[folds1==i,]
+  truth1&lt;-test1$Emergency
+  fittt&lt;-glm(Emergency~.,data=train1,family=&quot;binomial&quot;)
+  probbb&lt;-predict(fittt,newdata=test1,type=&quot;response&quot;)
+  diags1&lt;-rbind(diags1,class_diag(probbb,truth1))}
+summarize_all(diags1,mean)</code></pre>
+<pre><code>##     acc      sens      spec       ppv       auc
+## 1 0.775 0.8930882 0.4608333 0.8221338 0.7716211</code></pre>
+<p>After a LASSO regression model was established, “ID”“,”Survive“,”AgeGroup“,”Sex“,”Infection“,”SysBP&quot; and “Pulse” were retained to predict the patient’s emergency status. A 10-fold cross-validation was performed with the LASSO regression model. The average out-of-sample accuracy was 0.80, sensitivity was 0.92, recall was 0.83 and the AUC was 0.78. Compared to the logistic regression model, the out-of-sample accuracy of the LASSO regression model was higher, indicating that LASSO regression model was less fit.</p>
+<div id="broader-data-sources" class="section level5">
+<h5>Broader data sources:</h5>
+<p><a href="www.data.gov">Data.gov</a> 186,000+ datasets!</p>
+<p><a href="Social%20Explorer">Social Explorer</a> is a nice interface to Census and American Community Survey data (more user-friendly than the government sites). May need to sign up for a free trial.</p>
+<p><a href="www.bls.gov">U.S. Bureau of Labor Statistics</a></p>
+<p><a href="www.census.gov">U.S. Census Bureau</a></p>
+<p><a href="www.gapminder.org/data">Gapminder</a>, data about the world.</p>
+<p>…</p>
+</div>
+</div>
+</div>

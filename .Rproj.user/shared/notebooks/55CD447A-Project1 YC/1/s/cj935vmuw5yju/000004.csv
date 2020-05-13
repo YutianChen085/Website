@@ -1,0 +1,1 @@
+"0","project0 %>% summarize(mean(Expectancy),sd(Expectancy),mad(Expectancy),var(Expectancy),min(Expectancy),median(Expectancy),max(Expectancy),IQR(Expectancy),n_distinct(Expectancy),n())"

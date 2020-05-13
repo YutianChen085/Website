@@ -1,0 +1,1 @@
+"0","project0 %>% group_by(Continent) %>% summarize(mean(Happiness),mean(GDP),mean(Freedom),mean(Expectancy))"

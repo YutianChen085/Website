@@ -1,0 +1,6 @@
+"0","ppdf= tibble(PC1n=-svda$u[,  1]*svda$d[1],PC2n=svda$u[,  2]*svda$d[2])"
+"0","ggplot(ppdf,aes(x=PC1n,y=PC2n))+geom_point()+xlab(""PC1 "")+ ylab(""PC2"")+ "
+"0"," geom_abline(intercept=ap,slope=bp, lty = 2) + "
+"0"," geom_abline(intercept=ap,slope=-bp, lty = 2) + "
+"0"," geom_vline(xintercept=0,lwd=1.5, col=""purple"") + "
+"0"," geom_hline(yintercept=0,lwd=1.5, col=""blue"")"

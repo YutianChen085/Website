@@ -1,0 +1,266 @@
+---
+title: 'Project 1: Exploratory Data Analysis'
+author: SDS348 Yutian Chen (yc25997)
+date: '2020-03-15'
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+
+
+<div id="data-wrangling-and-data-exploration" class="section level2">
+<h2>Data Wrangling and Data Exploration</h2>
+<div id="introduction" class="section level3">
+<h3>Introduction:</h3>
+<p>Two real-life datasets found for this project aim to illustrate whether there is a relation between life expentency and happiness level of the countries around the world. Both datasets are acquired from <a href="https://wwww.kaggle.com/datasets" class="uri">https://wwww.kaggle.com/datasets</a>, and they interest me in the same way that they are comparing aspects of human on a world scale.</p>
+<p>The first dataset named “Happy” is organized as a World Happiness Report of 2019. It contains 9 columns and 156 rows. Each row represents a country in order of the happiness score rank. Variables ‘Score’ and ‘Overall rank’ use data from the Gallup World Poll. The columns following the score measure the degree of how six factors - ‘GDP per capita’, ‘Social support’, ‘Healthy life expectancy’, ‘Freedom to make life choices’, ‘Generosity’, and ‘Perceptions of corruption’ - affect the life evaluations.</p>
+<p>The second dataset named “Expectancy” demonstrate the life expectancy of the countries around the world. This dataset contains 6 columns and 223 rows. Each observation also corresponds to a country in order of their life expectancy rank. Overall Life Expectancy, Male Life Expectancy and Female Life Expectancy are three numeric columns, and the last column,Continent, defines which continent that country lies in. I chose this dataset as my second dataset because I think life expectancy and happiness level might be positively correlated. A country with a higher happiness score may associate with greater life expectancy. Looking at life expectancy dataset and happiness dataset together could provide a reference for people to choose the right country to live in.</p>
+</div>
+<div id="tidying-data-rearranging-widelong" class="section level3">
+<h3>1. Tidying data: Rearranging Wide/Long</h3>
+<pre class="r"><code>library(readr)
+Happy &lt;- read_csv(&quot;whr.csv&quot;)
+Expectancy &lt;- read_csv(&quot;le.csv&quot;)
+library(tidyverse)
+tidyexpectancy&lt;-Expectancy%&gt;%pivot_wider(names_from=&quot;Continent&quot;,values_from=&quot;Overall.Life&quot;)
+tidyexpectancy&lt;-tidyexpectancy%&gt;%pivot_longer(5:10,names_to=&quot;Continent&quot;,values_to=&quot;Overall.Life&quot;)%&gt;%select(Country,Overall.Life,Continent)%&gt;%na.omit()
+tidyhappy&lt;-Happy%&gt;%pivot_wider(names_from=&quot;Country.or.region&quot;, values_from=&quot;Score&quot;)
+tidyhappy&lt;-tidyhappy%&gt;%pivot_longer(8:163,names_to=&quot;Country&quot;,values_to=&quot;Happiness.score&quot;)%&gt;%
+  select(Country,Happiness.score,GDP.per.capita,Freedom.to.make.life.choices)%&gt;%na.omit()</code></pre>
+<p>For the “Expectancy” dataset, I used pivot_wider to increase the number of columns by creating new columns for each unique continent. Then, I used pivot_longer, select(), and na.omit() to rearrange the data and get rid of any extra data and NAs. The only vairables I left for the new dataset “tidyexpectancy” are “Country”, “Overall.life” and “Continent”.</p>
+<p>I did the same processes for tidying “Happy” dataset. First, I expand the columns for each country by using pivot_wider. Then, I cleaned up the data by using pivot_longer, select(), and na.omit to omit extra information and NAs. The only varibles I selected for this new dataset “tidyhappy” are “Country”, “Happiness.score”,“GDP.per.capita”, and “Freedom.to.make.life.choices”.</p>
+</div>
+<div id="joiningmerging" class="section level3">
+<h3>2. Joining/Merging</h3>
+<pre class="r"><code>library(dplyr)
+project&lt;-inner_join(tidyhappy,tidyexpectancy,by=c(&quot;Country&quot;=&quot;Country&quot;))
+tidyhappy%&gt;%anti_join(project,by=c(&quot;Country&quot;))%&gt;%nrow()</code></pre>
+<pre><code>## [1] 15</code></pre>
+<pre class="r"><code>tidyexpectancy%&gt;%anti_join(project,by=c(&quot;Country&quot;))%&gt;%nrow()</code></pre>
+<pre><code>## [1] 82</code></pre>
+<p>To combine “tidyexpectancy” and “tidyhappy” datasets, I used an inner_join by country matching. Because both datasets have the variable “Country” in common, an inner_join would only select the countires appeared in both datasets for the return data, which paring up the two datasets. Since not all countries were shared, some cases were dropped by inner_join spontaneously. 15 cases from “tidyhappy” and 82 cases from “tidyexpectancy” were dropped. The potential problem with dropping cases could be disrupting the original ranking in either dataset.</p>
+</div>
+<div id="wrangling" class="section level3">
+<h3>3. Wrangling</h3>
+<pre class="r"><code>project0 &lt;- project %&gt;% rename(&quot;Happiness&quot;=Happiness.score,&quot;GDP&quot;=GDP.per.capita,&quot;Freedom&quot;=Freedom.to.make.life.choices,&quot;Expectancy&quot;=Overall.Life)
+project0 %&gt;% filter(Country==&quot;United States&quot;)</code></pre>
+<pre><code>## # A tibble: 1 x 6
+##   Country       Happiness   GDP Freedom Expectancy Continent    
+##   &lt;chr&gt;             &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;        
+## 1 United States      6.89  1.43   0.454       79.8 North America</code></pre>
+<pre class="r"><code>project0 %&gt;% select(Country,GDP) %&gt;% arrange(desc(GDP))</code></pre>
+<pre><code>## # A tibble: 141 x 2
+##    Country                GDP
+##    &lt;chr&gt;                &lt;dbl&gt;
+##  1 Qatar                 1.68
+##  2 Luxembourg            1.61
+##  3 Singapore             1.57
+##  4 United Arab Emirates  1.50
+##  5 Kuwait                1.5 
+##  6 Ireland               1.50
+##  7 Norway                1.49
+##  8 Switzerland           1.45
+##  9 United States         1.43
+## 10 Saudi Arabia          1.40
+## # … with 131 more rows</code></pre>
+<pre class="r"><code>project0 %&gt;% group_by(Continent) %&gt;% summarize(mean(Happiness),mean(GDP),mean(Freedom),mean(Expectancy))</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##   Continent     `mean(Happiness)` `mean(GDP)` `mean(Freedom)` `mean(Expectancy)`
+##   &lt;chr&gt;                     &lt;dbl&gt;       &lt;dbl&gt;           &lt;dbl&gt;              &lt;dbl&gt;
+## 1 Africa                     4.38       0.512           0.336               61.0
+## 2 Asia                       5.32       0.977           0.408               73.2
+## 3 Europe                     6.21       1.22            0.407               78.2
+## 4 North America              6.15       0.929           0.455               75.1
+## 5 Oceania                    7.27       1.34            0.571               81.7
+## 6 South America              5.92       0.983           0.434               75.5</code></pre>
+<pre class="r"><code>project0 %&gt;% mutate(total_score=Happiness+Expectancy) %&gt;% arrange(desc(total_score))</code></pre>
+<pre><code>## # A tibble: 141 x 7
+##    Country     Happiness   GDP Freedom Expectancy Continent     total_score
+##    &lt;chr&gt;           &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt; &lt;chr&gt;               &lt;dbl&gt;
+##  1 Singapore        6.26  1.57   0.556       85   Asia                 91.3
+##  2 Japan            5.89  1.33   0.445       85   Asia                 90.9
+##  3 Iceland          7.49  1.38   0.591       83   Europe               90.5
+##  4 Switzerland      7.48  1.45   0.572       82.6 Europe               90.1
+##  5 Israel           7.14  1.28   0.371       82.4 Asia                 89.5
+##  6 Sweden           7.34  1.39   0.574       82.1 Europe               89.4
+##  7 Australia        7.23  1.37   0.557       82.2 Oceania              89.4
+##  8 Luxembourg       7.09  1.61   0.526       82.3 Europe               89.4
+##  9 Norway           7.55  1.49   0.603       81.8 Europe               89.4
+## 10 Canada           7.28  1.36   0.584       81.9 North America        89.2
+## # … with 131 more rows</code></pre>
+<p>For “project” dataset, I first renamed each variable into a shorter name and saved it as a new dataset called “project0”. To see values of a specifict country, I used filter() to choose the interest row: the happiness score, GDP, Freedom score, Expectancy for “United States” are 6.892, 1.433, 0.454, and 79.8 accrodingly. Using select() and follow by arrange(desc()) gave me a descent ranking of GDP per capita score for countries. Qatar has the highest GDP per capita score of 1.684. To compare average scores among continents, I first used group_by() to designate groups of data based on continent, following with summarize() to calculate mean for each numeric variable. Oceania has the greatest values for all numeric variable. Finally, I created a new column, “total_score”, for the sum of happiness score and life expectancy by using mutate(). After descent ranking of “total_score”, we can see Singapore is the top country with the highest sum of happiness score and life expectancy of 91.626.</p>
+<pre class="r"><code>project0 %&gt;% summarize(mean(Happiness),sd(Happiness),mad(Happiness),var(Happiness),min(Happiness),median(Happiness),max(Happiness),IQR(Happiness),n_distinct(Happiness),n())</code></pre>
+<pre><code>## # A tibble: 1 x 10
+##   `mean(Happiness… `sd(Happiness)` `mad(Happiness)` `var(Happiness)`
+##              &lt;dbl&gt;           &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+## 1             5.44            1.13             1.24             1.28
+## # … with 6 more variables: `min(Happiness)` &lt;dbl&gt;, `median(Happiness)` &lt;dbl&gt;,
+## #   `max(Happiness)` &lt;dbl&gt;, `IQR(Happiness)` &lt;dbl&gt;,
+## #   `n_distinct(Happiness)` &lt;int&gt;, `n()` &lt;int&gt;</code></pre>
+<pre class="r"><code>project0 %&gt;% summarize(mean(Expectancy),sd(Expectancy),mad(Expectancy),var(Expectancy),min(Expectancy),median(Expectancy),max(Expectancy),IQR(Expectancy),n_distinct(Expectancy),n())</code></pre>
+<pre><code>## # A tibble: 1 x 10
+##   `mean(Expectanc… `sd(Expectancy)` `mad(Expectancy… `var(Expectancy…
+##              &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+## 1             71.6             9.00             7.12             80.9
+## # … with 6 more variables: `min(Expectancy)` &lt;dbl&gt;, `median(Expectancy)` &lt;dbl&gt;,
+## #   `max(Expectancy)` &lt;dbl&gt;, `IQR(Expectancy)` &lt;dbl&gt;,
+## #   `n_distinct(Expectancy)` &lt;int&gt;, `n()` &lt;int&gt;</code></pre>
+<pre class="r"><code>project0 %&gt;% summarize(mean(GDP),sd(GDP),mad(GDP),var(GDP),min(GDP),median(GDP),max(GDP),IQR(GDP),n_distinct(GDP),n())</code></pre>
+<pre><code>## # A tibble: 1 x 10
+##   `mean(GDP)` `sd(GDP)` `mad(GDP)` `var(GDP)` `min(GDP)` `median(GDP)`
+##         &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;         &lt;dbl&gt;
+## 1       0.913     0.398      0.442      0.159          0          0.96
+## # … with 4 more variables: `max(GDP)` &lt;dbl&gt;, `IQR(GDP)` &lt;dbl&gt;,
+## #   `n_distinct(GDP)` &lt;int&gt;, `n()` &lt;int&gt;</code></pre>
+<pre class="r"><code>project0 %&gt;% group_by(Continent) %&gt;% summarize(mean(Happiness),sd(Happiness),mad(Happiness),var(Happiness),min(Happiness),median(Happiness),max(Happiness),IQR(Happiness),n_distinct(Happiness),n())</code></pre>
+<pre><code>## # A tibble: 6 x 11
+##   Continent `mean(Happiness… `sd(Happiness)` `mad(Happiness)` `var(Happiness)`
+##   &lt;chr&gt;                &lt;dbl&gt;           &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+## 1 Africa                4.38          0.628            0.529           0.394  
+## 2 Asia                  5.32          0.918            0.886           0.843  
+## 3 Europe                6.21          0.968            1.22            0.937  
+## 4 North Am…             6.15          0.971            0.611           0.943  
+## 5 Oceania               7.27          0.0559           0.0586          0.00312
+## 6 South Am…             5.92          0.496            0.386           0.246  
+## # … with 6 more variables: `min(Happiness)` &lt;dbl&gt;, `median(Happiness)` &lt;dbl&gt;,
+## #   `max(Happiness)` &lt;dbl&gt;, `IQR(Happiness)` &lt;dbl&gt;,
+## #   `n_distinct(Happiness)` &lt;int&gt;, `n()` &lt;int&gt;</code></pre>
+<pre class="r"><code>project0 %&gt;% group_by(Continent) %&gt;% summarize(mean(Expectancy),sd(Expectancy),mad(Expectancy),var(Expectancy),min(Expectancy),median(Expectancy),max(Expectancy),IQR(Expectancy),n_distinct(Expectancy),n())</code></pre>
+<pre><code>## # A tibble: 6 x 11
+##   Continent `mean(Expectanc… `sd(Expectancy)` `mad(Expectancy… `var(Expectancy…
+##   &lt;chr&gt;                &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+## 1 Africa                61.0            7.69             7.49             59.2 
+## 2 Asia                  73.2            6.38             5.49             40.7 
+## 3 Europe                78.2            3.37             4.00             11.4 
+## 4 North Am…             75.1            4.86             4.67             23.6 
+## 5 Oceania               81.7            0.707            0.741             0.5 
+## 6 South Am…             75.5            2.73             1.33              7.43
+## # … with 6 more variables: `min(Expectancy)` &lt;dbl&gt;, `median(Expectancy)` &lt;dbl&gt;,
+## #   `max(Expectancy)` &lt;dbl&gt;, `IQR(Expectancy)` &lt;dbl&gt;,
+## #   `n_distinct(Expectancy)` &lt;int&gt;, `n()` &lt;int&gt;</code></pre>
+<pre class="r"><code>project0 %&gt;% select_if(is.numeric)%&gt;%cor()%&gt;%round(3)</code></pre>
+<pre><code>##            Happiness   GDP Freedom Expectancy
+## Happiness      1.000 0.796   0.559      0.760
+## GDP            0.796 1.000   0.364      0.821
+## Freedom        0.559 0.364   1.000      0.310
+## Expectancy     0.760 0.821   0.310      1.000</code></pre>
+<pre class="r"><code>project0 %&gt;% select_if(is.numeric)%&gt;%cov()%&gt;%round(3)</code></pre>
+<pre><code>##            Happiness   GDP Freedom Expectancy
+## Happiness      1.277 0.358   0.091      7.726
+## GDP            0.358 0.159   0.021      2.942
+## Freedom        0.091 0.021   0.021      0.400
+## Expectancy     7.726 2.942   0.400     80.922</code></pre>
+<p>I also used summary for each variable to find the mean, standard deviation, median absolute deviation, variance, minimum, median, maximum, IQR, unique count, and total count. Before grouping by the continents, the mean Happiness score for all countries is 5.44 with a standard deviation of 1.13; the mean life expectancy is 71.58 with a standard deviation of 9.0; the mean comparitivie GDP score is 0.91 with a standard deviation of 0.40. After grouping by the continents, we can see that the Oceania has the highest mean happiness score of 7.27 and the highest mean life expectancy of 81.7, with a lowest standard deviation for happiness score of 0.06 and for life expectancy of 0.71. The result was not suprising because only two countries were belong to Oceania continent in this dataset. Finally, I found the correlation and covariance of the numeric values of the data by using cor() and cov(). The table showed that the happiness score, GDP score and life expectancy were all strongly correlated to each other, with correlation scores all higher than 0.7. Among the three facotrs, the happiness score and life expectancy have the highest covariance number, which is 7.726.</p>
+<div id="visualizing" class="section level4">
+<h4>4. Visualizing</h4>
+<pre class="r"><code>library(ggplot2)
+df&lt;-project0 %&gt;% select_if(is.numeric)
+hapexp&lt;-cor(df)%&gt;%as.data.frame%&gt;% rownames_to_column%&gt;%
+  pivot_longer(-1,names_to=&quot;name&quot;,values_to=&quot;correlation&quot;)
+hapexp%&gt;%ggplot(aes(rowname,name,fill=correlation))+
+  geom_tile()+
+  geom_text(aes(label=round(correlation,2)),color=&quot;black&quot;,size=4)+ 
+  theme(axis.text.x=element_text(angle=90,hjust=1))+
+  coord_fixed()+
+  xlab(&quot;&quot;)+ylab(&quot;&quot;)+ggtitle(&quot;Correlation Heatmap of Countries Around the World&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" />
+A heatmap has been created to visualize the correlations among all numeric variables. First, I selected only numerics with select_if(is.numeric). Then, a correlation matrix has been created by using cor(<numeric data>) and saved as “hapexp” file. Finally, I piped the correlation matrix into the ggplot(). As one can see, the lighter the blue color, the stronger the correlation between two variables. “Happiness”, “GDP” and “Expectancy” were all strongly correlated with each other compared to the color scale on the right, while “Freedom” has weaker correlations to all other vriables.</p>
+<pre class="r"><code>ggplot(data=project0,aes(x=Happiness,y=Expectancy,color=Continent))+
+  geom_point()+
+  ggtitle(&quot;Happiness Score vs. Life Expectancy of the Countires Around the World&quot;)+ 
+  ylab(&quot;Life Expectancy(years)&quot;)+ xlab(&quot;Happiness Score&quot;)+
+  facet_wrap(~Continent)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>project0$Freedomlevel &lt;- ifelse(project0$Freedom&lt;0.5,&quot;Low&quot;,&quot;High&quot;)
+ggplot(project0, aes(x=Freedomlevel,y=Happiness,fill=Continent))+
+geom_bar(stat=&quot;summary&quot;, fun.y=&quot;mean&quot;,position=&quot;dodge&quot;)+
+theme(axis.text.x = element_text(angle=45, hjust=1))+
+  xlab(&quot;Freedom Level&quot;)+
+  ylab(&quot;Average Happiness Score&quot;)+
+  ggtitle(&quot;Average Happiness Score by Freedom Level&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" />
+To visualize the relationship between happiness score and life expectancy, I gave each continent its own scatter plot by faceting and coloring all points. I set happiness score at the x-aixs and life expectancy at the y-axis. I titled the overall plots “Happiness Score vs. Life Expectancy of the Countires Around the World”. We can see that the correlations between happiness score and life expectancy were weak after grouping by the continent. In addition, I also created a bar graph with freedom levels and continents on the x-axis and average happiness score on the y-axis. To investigate the freedom level of the countries, I first created a new variable “Freedomlevel” to seperate countries into “Low” (&lt;0.5) and “High”(&gt;0.5) freedom level based on their freedom score. Then, I used ggplot() and geom_bar(), within which the average hapiness scores were determined by stat=“summary” and fun.y=“mean”, to create the graph. In the graph, the happiness scores were higher in “high” freedom level group for all continents except Africa, although the differences were not huge.</p>
+<p>#### 5. Dimensionality Reduction</p>
+<pre class="r"><code>projectfull&lt;-full_join(tidyhappy,tidyexpectancy,by=c(&quot;Country&quot;=&quot;Country&quot;))%&gt;%na.omit()
+projectfull%&gt;%select_if(is.numeric)%&gt;%scale%&gt;%cov%&gt;%round(2)</code></pre>
+<pre><code>##                              Happiness.score GDP.per.capita
+## Happiness.score                         1.00           0.80
+## GDP.per.capita                          0.80           1.00
+## Freedom.to.make.life.choices            0.56           0.36
+## Overall.Life                            0.76           0.82
+##                              Freedom.to.make.life.choices Overall.Life
+## Happiness.score                                      0.56         0.76
+## GDP.per.capita                                       0.36         0.82
+## Freedom.to.make.life.choices                         1.00         0.31
+## Overall.Life                                         0.31         1.00</code></pre>
+<pre class="r"><code>pcajoin&lt;-projectfull%&gt;%select_if(is.numeric)%&gt;%rename(&quot;Happiness&quot;=Happiness.score,&quot;GDP&quot;=GDP.per.capita,&quot;Freedom&quot;=Freedom.to.make.life.choices,&quot;Expectancy&quot;=Overall.Life)
+pcajoin=data.frame(scale(pcajoin))
+ggplot(pcajoin,aes(x=Expectancy,y=Happiness))+geom_point()+coord_fixed()</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>projectgg=ggplot(pcajoin,aes(x=Expectancy,y=Happiness))+geom_point()
+projectgg+geom_segment(aes(xend=Expectancy,yend=0),lty=2)+
+  geom_hline(yintercept=0,color=&quot;purple&quot;,lwd=1.5)+
+  geom_point(aes(y=0),colour=&quot;pink&quot;,size=1)+coord_fixed()</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>var(pcajoin$Happiness)+var(pcajoin$Expectancy)</code></pre>
+<pre><code>## [1] 2</code></pre>
+<pre class="r"><code>ggplot(pcajoin,aes(x=Expectancy,y=0))+
+  geom_abline(intercept=0,slope=0,col=&quot;purple&quot;,lwd=1.5)+
+  geom_point(col=&quot;pink&quot;,size=1)+
+  theme(axis.text.y=element_blank(),axis.title.y=element_blank())+coord_fixed()</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>var(pcajoin$Expectancy)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>reg1=lm(Happiness~Expectancy, data=pcajoin)
+a1=reg1$coefficients[1]
+b1=reg1$coefficients[2]
+pline1=projectgg+geom_abline(intercept=a1,slope=b1,col=&quot;purple&quot;,lwd=1.5)
+pline1+geom_segment(aes(xend=Expectancy, yend=reg1$fitted.values),lty=2)+
+  geom_point(y=reg1$fitted.values,size=1,shape=16,color=&quot;yellow&quot;)+coord_fixed()</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>renamepf&lt;-projectfull%&gt;%rename(&quot;Happiness&quot;=Happiness.score,&quot;GDP&quot;=GDP.per.capita,&quot;Freedom&quot;=Freedom.to.make.life.choices,&quot;Expectancy&quot;=Overall.Life)
+renamepf%&gt;%mutate(fit=reg1$fitted.values)%&gt;%
+  select(Happiness,Expectancy,fit)%&gt;%
+  mutate(dist=ifelse(Expectancy&lt;0,-sqrt(weight^2+fit^2),sqrt(Expectancy^2+fit^2)))%&gt;%
+  ggplot(aes(x=Expectancy,y=0))+geom_abline(intercept=0,slope=0,col=&quot;purple&quot;,lwd=1.5)+
+  geom_point(col=&quot;orange&quot;,size=3,alpha=.8)+
+  geom_point(aes(x=dist),col=&quot;yellow&quot;,size=2,alpha=.8)+
+  theme(axis.text.y=element_blank(), axis.title.y=element_blank())+coord_fixed()</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>var(pcajoin$Expectancy)+var(reg1$fitted.values)</code></pre>
+<pre><code>## [1] 1.57765</code></pre>
+<pre class="r"><code>xy=cbind(projectfull$Overall.Life,projectfull$Happiness.score)
+svda=svd(xy)
+pc=xy %*% svda$v[, 1] %*% t(svda$v[, 1])
+bp=svda$v[2, 1]/svda$v[1, 1]
+ap=mean(pc[, 2])-bp*mean(pc[, 1])
+projectgg + geom_segment(xend=pc[, 1], yend=pc[, 2])+ geom_abline(intercept=ap, slope=bp, col=&quot;purple&quot;,lwd= 1.5)+coord_fixed()+ geom_point(aes(x=pc[, 1],y=pc[, 2]), color=&quot;pink&quot;, size=2)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>projectgg+
+  geom_vline(xintercept=0, lty=2)+
+  geom_hline(yintercept=0, lty=2)+ 
+  geom_abline(intercept=ap, slope=bp, col=&quot;blue&quot;, lwd=1) +coord_fixed()+
+  geom_abline(intercept=ap, slope=-bp, col=&quot;purple&quot;, lwd=1) + 
+ annotate(geom=&quot;text&quot;, -1, 1.5, col=&quot;purple&quot;, label=&quot;PC2&quot;, size=5) + 
+ annotate(geom=&quot;text&quot;, 1, 1.5, col=&quot;blue&quot;, label=&quot;PC1&quot;, size=5)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ppdf= tibble(PC1n=-svda$u[,  1]*svda$d[1],PC2n=svda$u[,  2]*svda$d[2])
+ggplot(ppdf,aes(x=PC1n,y=PC2n))+geom_point()+xlab(&quot;PC1 &quot;)+ ylab(&quot;PC2&quot;)+ 
+ geom_abline(intercept=ap,slope=bp, lty = 2) + 
+ geom_abline(intercept=ap,slope=-bp, lty = 2) + 
+ geom_vline(xintercept=0,lwd=1.5, col=&quot;purple&quot;) + 
+ geom_hline(yintercept=0,lwd=1.5, col=&quot;blue&quot;)</code></pre>
+<p><img src="/project1_files/figure-html/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" />
+I started by using full_join to merge the ‘tidyhappy’ and ‘tidyexpectancy’ datasets, matched by each country. I omitted the NA in order to remove missing data and allow for covariance and correlation analysis. I named this merged data ‘projfectfull’. Since principal component analysis (PCA focuses on covariation and correlation, I started off by using select_if(is.numeric)%&gt;%scale%&gt;%cov to find those respective numbers for each pair of variables. I created a new data set called ‘pcajoin’ to select only the numeric data from the ‘projectfull’ dataset. I scaled these variables which takes the value, subtracts it by the mean and divides it by the stadard deviation. I used ggplot to create a scatterplot with these scaled “Expectancy”values on x-axis and “Happiness Score” on the y-axis. Then, layers were added to show a 1-D representation of the data by only showing the x-axis. This was not idea because we lost detailed information about value. Although the data was aimed to reduce dimensions, we were also trying to keep as much of the important information as we could.To adjust it, I used linear regression to show a line taht minimizes the vertical distance to the points. Than I added the variance of both the “Expectancy” value data and the fitted.values data to find how spread out the points are on the line. This was calculated to be about 1.58. The points on this linear regression have a greater variance than the points on the single horizontal line (which equals 1). Then I rotated the linear regression line down to the horizontal line. Yellow dots on the purple line are the spread of points on the linear regression line while the orage dots are spread of points on the horizontal axis. The yellow dots have a greater variance.</p>
+<p>I also found the line that maximizes the variance of the points by minimizing the orthogonal residuals. This helps with the next step which was where I found the principal components. The first principal components (PC1) was the direction in which data has the most variance. The second principal component (PC2) was the direction of the variance perpendicular to PC1.
+No data points here in the graph were changed; PC1 and PC2 provide us different perspectives to look the same data. Based on the PCA, we could say that countries with dots above pC1 tend to have greater life expectancy and happiness scores. Both life expectancy and happiness score contribute positively to this component. On the other hand, life expectancy controbutes positively and happiness score contribute negatively for PC2. Countries with higher scores on PC2 tend to have greater happiness scores than than the life expectancy. Countries with lower scores on PC2 tend to have greater life expectancy than happiness scores.
+…</p>
+</div>
+</div>
+</div>

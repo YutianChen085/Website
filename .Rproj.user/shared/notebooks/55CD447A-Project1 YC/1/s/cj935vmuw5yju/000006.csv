@@ -1,0 +1,1 @@
+"0","project0 %>% summarize(mean(GDP),sd(GDP),mad(GDP),var(GDP),min(GDP),median(GDP),max(GDP),IQR(GDP),n_distinct(GDP),n())"

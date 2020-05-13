@@ -1,0 +1,1 @@
+"0","project0 %>% mutate(total_score=Happiness+Expectancy) %>% arrange(desc(total_score))"

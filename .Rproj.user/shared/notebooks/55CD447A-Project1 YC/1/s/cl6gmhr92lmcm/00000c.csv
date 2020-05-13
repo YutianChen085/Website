@@ -1,0 +1,35 @@
+"0","library(readr)"
+"0","Happy <- read_csv(""whr.csv"")"
+"2","Parsed with column specification:
+cols(
+  `Country (region)` = [31mcol_character()[39m,
+  Ladder = [32mcol_double()[39m,
+  `SD of Ladder` = [32mcol_double()[39m,
+  `Positive affect` = [32mcol_double()[39m,
+  `Negative affect` = [32mcol_double()[39m,
+  `Social support` = [32mcol_double()[39m,
+  Freedom = [32mcol_double()[39m,
+  Corruption = [32mcol_double()[39m,
+  Generosity = [32mcol_double()[39m,
+  `Log of GDP
+per capita` = [32mcol_double()[39m,
+  `Healthy life
+expectancy` = [32mcol_double()[39m
+)
+"
+"0","Expectancy <- read_csv(""le.csv"")"
+"2","Parsed with column specification:
+cols(
+  Rank = [32mcol_double()[39m,
+  Country = [31mcol_character()[39m,
+  `Overall Life` = [32mcol_double()[39m,
+  `Male Life` = [32mcol_double()[39m,
+  `Female Life` = [32mcol_double()[39m,
+  Continent = [31mcol_character()[39m
+)
+"
+"0","library(tidyverse)"
+"0","tidyexpectancy<-Expectancy%>%pivot_wider(names_from=""Continent"",values_from=""Overall Life"")"
+"0","tidyexpectancy<-tidyexpectancy%>%pivot_longer(5:10,names_to=""Continent"",values_to=""Overall Life"")%>%select(Country,Overall Life,Continent)%>%na.omit()"
+"2","Error: unexpected symbol in ""tidyexpectancy<-tidyexpectancy%>%pivot_longer(5:10,names_to=""Continent"",values_to=""Overall Life"")%>%select(Country,Overall Life""
+"

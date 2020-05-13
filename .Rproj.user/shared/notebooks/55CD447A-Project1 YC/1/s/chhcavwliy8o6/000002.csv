@@ -1,0 +1,7 @@
+"0","project0$Freedomlevel <- ifelse(project0$Freedom<0.5,""Low"",""High"")"
+"0","ggplot(project0, aes(x=Freedomlevel,y=Happiness,fill=Continent))+"
+"0","geom_bar(stat=""summary"", fun.y=""mean"",position=""dodge"")+"
+"0","theme(axis.text.x = element_text(angle=45, hjust=1))+"
+"0","  xlab(""Freedom Level"")+"
+"0","  ylab(""Average Happiness Score"")+"
+"0","  ggtitle(""Average Happiness Score by Freedom Level"")"

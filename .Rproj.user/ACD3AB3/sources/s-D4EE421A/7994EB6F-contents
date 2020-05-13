@@ -1,0 +1,18 @@
+---
+title: My New Post
+author: Yutian Chen
+date: '2020-05-13'
+slug: my-new-post
+categories: []
+tags: []
+description: ''
+---
+```{python}
+libary(reti)
+x="dog"
+```
+
+```{R}
+
+This is an R code chunk
+```

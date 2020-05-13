@@ -1,0 +1,6 @@
+"0","xy=cbind(projectfull$Overall.Life,projectfull$Happiness.score)"
+"0","svda=svd(xy)"
+"0","pc=xy %*% svda$v[, 1] %*% t(svda$v[, 1])"
+"0","bp=svda$v[2, 1]/svda$v[1, 1]"
+"0","ap=mean(pc[, 2])-bp*mean(pc[, 1])"
+"0","projectgg + geom_segment(xend=pc[, 1], yend=pc[, 2])+ geom_abline(intercept=ap, slope=bp, col=""purple"",lwd= 1.5)+coord_fixed()+ geom_point(aes(x=pc[, 1],y=pc[, 2]), color=""pink"", size=2)"
