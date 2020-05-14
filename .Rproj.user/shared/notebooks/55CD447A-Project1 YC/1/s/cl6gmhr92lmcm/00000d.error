@@ -1,1 +1,0 @@
-{"frames":[],"message":"Error: unexpected symbol in \"tidyexpectancy<-tidyexpectancy%>%pivot_longer(5:10,names_to=\"Continent\",values_to=\"Overall Life\")%>%select(Country,Overall Life\"\n"}

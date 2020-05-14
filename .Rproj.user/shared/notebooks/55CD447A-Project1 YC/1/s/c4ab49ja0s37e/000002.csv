@@ -1,5 +1,0 @@
-"0","ggplot(data=project0,aes(x=Happiness,y=Expectancy,color=Continent))+"
-"0","  geom_point()+"
-"0","  ggtitle(""Happiness Score vs. Life Expectancy of the Countires Around the World"")+ "
-"0","  ylab(""Life Expectancy(years)"")+ xlab(""Happiness Score"")+"
-"0","  facet_wrap(~Continent)"

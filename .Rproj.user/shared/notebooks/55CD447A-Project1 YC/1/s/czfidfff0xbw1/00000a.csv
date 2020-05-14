@@ -1,6 +1,0 @@
-"0","reg1=lm(Happiness~Expectancy, data=pcajoin)"
-"0","a1=reg1$coefficients[1]"
-"0","b1=reg1$coefficients[2]"
-"0","pline1=projectgg+geom_abline(intercept=a1,slope=b1,col=""purple"",lwd=1.5)"
-"0","pline1+geom_segment(aes(xend=Expectancy, yend=reg1$fitted.values),lty=2)+"
-"0","  geom_point(y=reg1$fitted.values,size=1,shape=16,color=""yellow"")+coord_fixed()"

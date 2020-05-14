@@ -1,4 +1,0 @@
-"0","projectgg=ggplot(pcajoin,aes(x=Expectancy,y=Happiness))+geom_point()"
-"0","projectgg+geom_segment(aes(xend=Expectancy,yend=0),lty=2)+"
-"0","  geom_hline(yintercept=0,color=""purple"",lwd=1.5)+"
-"0","  geom_point(aes(y=0),colour=""pink"",size=1)+coord_fixed()"

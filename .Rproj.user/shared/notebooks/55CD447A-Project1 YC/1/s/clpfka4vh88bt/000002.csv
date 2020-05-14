@@ -1,2 +1,0 @@
-"0","project0 <- project %>% rename(""Happiness""=Happiness.score,""GDP""=GDP.per.capita,""Freedom""=Freedom.to.make.life.choices,""Expectancy""=Overall.Life)"
-"0","project0 %>% filter(Country==""United States"")"

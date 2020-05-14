@@ -20,9 +20,10 @@ theme = "hugo-sustain"
   custom_js  = []
 
 [params.social]
-  Github        = "https://github.com/YutianChen085/Website"
+  Github        = "YutianChen085"
   Email         = "yutian.chen@utexas.edu"
-  
+  Linkedin      = "yyy_sweety"
+  Twitter       = "YutianChen5"
 
 
 ## Main Menu
