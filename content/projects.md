@@ -10,7 +10,7 @@ title: Projects
 
 ## Projects
 
-Here are some projects I have recently completed:
+Here are two projects I have completed from computational biology class:
 
 - [Exploratory Data Analysis with Tidyverse Tools](/project1/)
 
