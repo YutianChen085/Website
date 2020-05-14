@@ -12,12 +12,12 @@
     
     
     <item>
-      <title>My New Post</title>
-      <link>/blog/my-new-post/</link>
+      <title>R and Python Talk</title>
+      <link>/blog/pythons/</link>
       <pubDate>Wed, 13 May 2020 00:00:00 +0000</pubDate>
       
-      <guid>/blog/my-new-post/</guid>
-      <description></description>
+      <guid>/blog/pythons/</guid>
+      <description> # R code chunk library(reticulate) wc&amp;lt;-&amp;quot;Welcome&amp;quot; # Phython code chunk tb=&amp;quot;to the blog&amp;quot; print(r.wc,tb) ## (&amp;#39;Welcome&amp;#39;, &amp;#39;to the blog&amp;#39;) cat(c(wc,py$tb)) ## Welcome to the blog </description>
     </item>
     
     <item>

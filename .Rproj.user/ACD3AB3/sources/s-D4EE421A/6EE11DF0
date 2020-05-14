@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1589423447604.000,
+    "dirty" : true,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "6EE11DF0",
+    "lastKnownWriteTime" : 1589426010,
+    "last_content_update" : 1589426300051,
+    "path" : "~/Desktop/Website/content/blog/2020-05-13-pythons.Rmd",
+    "project_path" : "content/blog/2020-05-13-pythons.Rmd",
+    "properties" : {
+        "cursorPosition" : "25,0",
+        "scrollLine" : "19"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

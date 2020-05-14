@@ -1,0 +1,27 @@
+---
+title: R and Python Talk
+author: Yutian Chen
+date: '2020-05-13'
+slug: pythons
+categories: []
+tags: []
+description: ''
+---
+
+```{R}
+# R code chunk
+library(reticulate)
+wc<-"Welcome"
+```
+
+```{python}
+# Phython code chunk
+tb="to the blog"
+print(r.wc,tb)
+```
+
+```{R}
+cat(c(wc,py$tb))
+```
+
+![](/blog/2020-05-13-pythons_files/pig.png)
